@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Slot Booking Portal</title>
+    <style>
+        /* Internal CSS */
+        body {
+            background-color: #f7fafc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            font-family: 'Arial', sans-serif;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 2rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+            max-width: 64rem;
+            width: 100%;
+        }
+        .title {
+            font-size: 1.875rem;
+            font-weight: bold;
+            text-align: center;
+            color: #2d3748;
+            margin-bottom: 1rem;
+        }
+        .description {
+            text-align: center;
+            color: #718096;
+            margin-bottom: 2rem;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+        @media (min-width: 768px) {
+            .grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        @media (min-width: 1024px) {
+            .grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+        .day-card {
+            background-color: #f7fafc;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.05);
+        }
+        .day-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #4a5568;
+            margin-bottom: 1rem;
+        }
+        .slot-button {
+            width: 100%;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+        .slot-button.green {
+            background-color: #48bb78;
+            color: #ffffff;
+        }
+        .slot-button.green:hover {
+            background-color: #38a169;
+        }
+        .slot-button.red {
+            background-color: #f56565;
+            color: #ffffff;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">Slot Booking Portal</h1>
+        <p class="description">
+            Book your slot for the next 6 days. Each day has 10 slots (first-come-first-serve).
+        </p>
+        <div class="grid">
+            {% for day, slots_available in slots.items() %}
+                <div class="day-card">
+                    <h3 class="day-title">{{ day }}</h3>
+                    <div class="space-y-2">
+                        {% for slot in range(10) %}
+                            <button
+                                class="slot-button {% if not slots_available[slot] %}red{% else %}green{% endif %}"
+                                data-day="{{ day }}"
+                                data-slot="{{ slot }}"
+                                {% if not slots_available[slot] %}disabled{% endif %}>
+                                Slot {{ slot + 1 }}
+                                {% if not slots_available[slot] %} (Booked){% endif %}
+                            </button>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <script>
+        const user_id = 'USER_UNIQUE_ID'; // Replace this with the actual user ID
+
+        document.querySelectorAll('.slot-button').forEach(button => {
+            button.addEventListener('click', async () => {
+                const day = button.getAttribute('data-day');
+                const slot = button.getAttribute('data-slot');
+
+                const response = await fetch('/book', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ day, slot: parseInt(slot), user_id }),
+                });
+
+                const result = await response.json();
+                if (result.status === 'success') {
+                    button.disabled = true;
+                    button.textContent += ' (Booked)';
+                    button.classList.remove('green');
+                    button.classList.add('red');
+                } else {
+                    alert(result.message);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
